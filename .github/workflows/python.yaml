@@ -8,7 +8,7 @@ jobs:
     steps:
     # in intial commit is set to v1 because I want to test also the dependabot
     - uses: actions/checkout@v1
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
         python-version: 3.9
         cache: 'pip'
