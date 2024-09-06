@@ -5,7 +5,7 @@ updates:
   schedule:
     interval: "weekly"
   labels:
-  - "CI/CD"
+  - "dependabot"
   commit-message:
     prefix: ci
 - package-ecosystem: "pip"
@@ -13,7 +13,7 @@ updates:
   schedule:
     interval: "weekly"
   labels:
-  - "PYTHON"
+  - "dependabot"
   commit-message:
     prefix: pip
   
