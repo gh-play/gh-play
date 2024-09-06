@@ -1,9 +1,9 @@
-name: Deploy
+name: Python
 
 on: [push, pull_request]
 
 jobs:
-  deploy:
+  python:
     runs-on: ubuntu-latest
     steps:
     # in intial commit is set to v1 because I want to test also the dependabot
