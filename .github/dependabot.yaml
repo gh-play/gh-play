@@ -8,3 +8,12 @@ updates:
   - "CI/CD"
   commit-message:
     prefix: ci
+- package-ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  labels:
+  - "PYTHON"
+  commit-message:
+    prefix: pip
+  
