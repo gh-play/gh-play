@@ -8,3 +8,4 @@ I am trying some gh functionalities
 - some deployment for a simple html gh page
 - a simple python script in the CI
 - Trying an automerge tool
+  - And remember to give it permissions
