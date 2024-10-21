@@ -1,0 +1,57 @@
+name: Automerge v2.x branches
+
+on:
+  pull_request:   # Only trigger when there is a pull request
+    branches:
+      - 'v2.*'    # Triggers on all v2.x branches
+      #note that branches are v2.MINOR and tags are v2.MINOR.PATCH
+    types:
+      - closed
+
+jobs:
+  recursive-merge:
+    #triggers if the pull request is merged
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the targeted branch (the v2.*)
+      - name: Checkout to the target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          
+      # Step 2: Determine next branch dynamically using algebra
+      - name: Determine next branch
+        id: next_branch
+        run: |
+          # Get current branch name (e.g., v2.9)
+          CURRENT_BRANCH=${{ github.base_ref }}
+          
+          # Extract the version number, assuming the branch is named like v2.X (e.g., v2.9 or v2.10)
+          CURRENT_VERSION=${CURRENT_BRANCH#v2.}
+
+          # Increment the minor version (e.g., v2.9 becomes v2.10)
+          NEXT_VERSION=$((CURRENT_VERSION + 1))
+          NEXT_BRANCH="v2.${NEXT_VERSION}"
+
+          # Check if the proposed next branch exists, otherwise fall back to master
+          if git ls-remote --exit-code --heads origin $NEXT_BRANCH; then
+            echo "Next branch is $NEXT_BRANCH"
+          else
+            echo "$NEXT_BRANCH does not exist, falling back to master"
+            NEXT_BRANCH="main"
+          fi
+
+          echo "branch=$NEXT_BRANCH" >> $GITHUB_OUTPUT
+
+      # Step 3: Checkout the next branch
+      - name: Set up a new PR to the target branch
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr create 
+          --title "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
+          --body "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
+          --base "${{ steps.next_branch.outputs.branch }}"
+     
