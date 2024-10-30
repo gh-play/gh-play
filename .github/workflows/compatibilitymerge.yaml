@@ -11,16 +11,12 @@ on:
 
 jobs:
   recursive-merge:
-    #triggers if the pull request is merged
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the targeted branch (the v2.*)
+      # Step 1: Checkout the merged branch
       - name: Checkout to the target branch
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.base_ref }}
           
       # Step 2: Determine next branch dynamically using algebra
       - name: Determine next branch
@@ -50,11 +46,9 @@ jobs:
         env:
             GH_TOKEN: ${{ github.token }}
         run: | 
-          git checkout ${{ github.base_ref }}
           git checkout -b "merge-test${{ github.head_ref }}"
-          git merge ${{ github.head_ref }}
-          git push origin "merge-test${{ github.head_ref }}"
-          gh pr merge ${{ github.event.pull_request.number }} --title "MergeChek ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}" --body "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}" --base "${{ steps.next_branch.outputs.branch }}"
+          git push origin -f "merge-test${{ github.head_ref }}"
+          gh pr create --title "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --body "Automerging ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --base "${{ steps.next_branch.outputs.branch }}"
 
       # Step 3: Checkout the next branch
       # - name: Set up a new PR to the target branch
