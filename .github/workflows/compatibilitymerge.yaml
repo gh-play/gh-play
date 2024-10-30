@@ -51,9 +51,22 @@ jobs:
           git checkout -b "$MERGE_BRANCH"
           git push origin -f "$MERGE_BRANCH"
           echo "branch=$MERGE_BRANCH" >> $GITHUB_OUTPUT
+          gh pr list --draft --label merge-check -H "$MERGE_BRANCH" --json number > prs.json
+          PRS=$(jq length prs.json)
+          if [ $PRS -eq 0 ]; then
+            echo "PR_needed=true" >> $GITHUB_OUTPUT
+          elif [ $PRS -gt 1 ]; then
+            echo "Multiple PRs found, this is not expected"
+            exit 1
+          else
+            echo "PR_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+
 
       # Step 3: Checkout the next branch
       - name: Set up a new PR to the target branch
+        if: ${{ steps.merge_branch.outputs.PR_needed == 'true' }}
         env:
             GH_TOKEN: ${{ github.token }}
         run: >
@@ -62,5 +75,5 @@ jobs:
           --body "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}\nPlease refer to #${{ github.event.pull_request.number }}"
           --base "${{ steps.next_branch.outputs.branch }}"
           --head "${{ steps.merge_branch.outputs.branch }}"
+          --label "merge-check"
           --draft
-     
