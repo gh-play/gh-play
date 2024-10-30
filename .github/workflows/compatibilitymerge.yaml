@@ -1,4 +1,4 @@
-name: Automerge v2.x branches
+name: MergeCheck
 
 on:
   pull_request:   # Only trigger when there is a pull request
