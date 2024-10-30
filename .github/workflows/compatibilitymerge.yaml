@@ -48,7 +48,7 @@ jobs:
         run: | 
           git checkout -b "merge-test${{ github.head_ref }}"
           git push origin "merge-test${{ github.head_ref }}"
-          gh pr merge ${{ github.event.pull_request.number }} --title "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --body "Automerging ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --base "${{ steps.next_branch.outputs.branch }}"
+          gh pr create --title "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --body "Automerging ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --base "${{ steps.next_branch.outputs.branch }}"
 
       # Step 3: Checkout the next branch
       # - name: Set up a new PR to the target branch
