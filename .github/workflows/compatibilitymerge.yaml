@@ -42,21 +42,25 @@ jobs:
 
           echo "branch=$NEXT_BRANCH" >> $GITHUB_OUTPUT
       
-      - name: Merge
+      - name: Push the merged branch
+        id: merge_branch
         env:
             GH_TOKEN: ${{ github.token }}
         run: | 
-          git checkout -b "merge-test${{ github.head_ref }}"
-          git push origin -f "merge-test${{ github.head_ref }}"
-          gh pr create --title "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --body "Automerging ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}" --base "${{ steps.next_branch.outputs.branch }}"
+          MERGE_BRANCH="merge-test-${{ github.head_ref }}-into-${{ steps.next_branch.outputs.branch }}-PR-${{ github.event.pull_request.number }}"
+          git checkout -b "$MERGE_BRANCH"
+          git push origin -f "$MERGE_BRANCH"
+          echo "branch=$MERGE_BRANCH" >> $GITHUB_OUTPUT
 
       # Step 3: Checkout the next branch
-      # - name: Set up a new PR to the target branch
-      #   env:
-      #       GH_TOKEN: ${{ github.token }}
-      #   run: >
-      #     gh pr create 
-      #     --title "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
-      #     --body "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
-      #     --base "${{ steps.next_branch.outputs.branch }}"
+      - name: Set up a new PR to the target branch
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr create 
+          --title "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}"
+          --body "MergeChek ${{ github.head_ref }} into ${{ steps.next_branch.outputs.branch }}\nPlease refer to #${{ github.event.pull_request.number }}"
+          --base "${{ steps.next_branch.outputs.branch }}"
+          --head "${{ steps.merge_branch.outputs.branch }}"
+          --draft
      
