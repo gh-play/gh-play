@@ -70,7 +70,7 @@ jobs:
 
       
   merge-check:
-    if: ${{ github.event.action.closed == false }}
+    if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
     needs: get-info
 
@@ -102,10 +102,12 @@ jobs:
           --draft
 
   remove-merge-check:
-    if: ${{ github.event.action.closed == true }}
+    if: ${{ github.event.action == 'closed' }}
     runs-on: ubuntu-latest
     needs: get-info
     steps:
+      - name: Checkout to the target branch to give context to the gh CLI
+        uses: actions/checkout@v4
       - name: Remove merge-check PR and branch
         if: ${{ needs.get-info.outputs.needs_pr == 'false' }}
         env:
