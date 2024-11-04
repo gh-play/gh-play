@@ -1,5 +1,8 @@
 name: MergeCheck
 
+permissions:
+      contents: write
+
 on:
   workflow_call: #just to comment a single line
   # pull_request:   # Only trigger when there is a pull request
@@ -13,7 +16,6 @@ on:
 
 jobs:
   get-info:
-    # permissions: read-all
     outputs:
       next_version: ${{ steps.next_version.outputs.branch }}
       merge_branch: ${{ steps.merge_branch.outputs.branch }}
@@ -72,8 +74,6 @@ jobs:
 
       
   merge-check:
-    permissions:
-      contents: write
     if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
     needs: get-info
@@ -106,8 +106,6 @@ jobs:
           --draft
 
   remove-merge-check:
-    permissions:
-      contents: write
     if: ${{ github.event.action == 'closed' }}
     runs-on: ubuntu-latest
     needs: get-info
