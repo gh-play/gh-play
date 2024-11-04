@@ -1,0 +1,118 @@
+name: MergeCheck
+
+on:
+  pull_request:   # Only trigger when there is a pull request
+    branches:
+      - 'v2.*'    # Triggers on all v2.x branches
+      #note that branches are v2.MINOR and tags are v2.MINOR.PATCH
+    types:
+      - opened
+      - synchronize
+      - closed
+
+jobs:
+  get-info:
+    outputs:
+      next_version: ${{ steps.next_version.outputs.branch }}
+      merge_branch: ${{ steps.merge_branch.outputs.branch }}
+      needs_pr: ${{ steps.merge_branch.outputs.PR_needed }}
+      pr_number: ${{ steps.merge_branch.outputs.PR_number }}
+
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the merged branch
+      - name: Checkout to the target branch
+        uses: actions/checkout@v4
+          
+      # Step 2: Determine next branch dynamically using algebra
+      - name: Determine next version branch
+        id: next_version
+        run: |
+          # Get current branch name (e.g., v2.9)
+          CURRENT_BRANCH=${{ github.base_ref }}
+          
+          # Extract the version number, assuming the branch is named like v2.X (e.g., v2.9 or v2.10)
+          CURRENT_VERSION=${CURRENT_BRANCH#v2.}
+
+          # Increment the minor version (e.g., v2.9 becomes v2.10)
+          NEXT_VERSION=$((CURRENT_VERSION + 1))
+          NEXT_BRANCH="v2.${NEXT_VERSION}"
+
+          # Check if the proposed next branch exists, otherwise fall back to master
+          if git ls-remote --exit-code --heads origin $NEXT_BRANCH; then
+            echo "Next branch is $NEXT_BRANCH"
+          else
+            echo "$NEXT_BRANCH does not exist, falling back to master"
+            NEXT_BRANCH="main"
+          fi
+
+          echo "branch=$NEXT_BRANCH" >> $GITHUB_OUTPUT
+      
+      - name: Determine the merge branch name and the necessity of opening a PR
+        id: merge_branch
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: | 
+          MERGE_BRANCH="merge-test-${{ github.head_ref }}-into-${{ steps.next_version.outputs.branch }}-PR-${{ github.event.pull_request.number }}"
+          echo "branch=$MERGE_BRANCH" >> $GITHUB_OUTPUT
+          gh pr list --draft --label merge-check -H "$MERGE_BRANCH" --json number > prs.json
+          PRS=$(jq length prs.json)
+          if [ $PRS -eq 0 ]; then
+            echo "PR_needed=true" >> $GITHUB_OUTPUT
+            echo "PR_number=unknown" >> $GITHUB_OUTPUT
+          elif [ $PRS -gt 1 ]; then
+            echo "Multiple PRs found, this is not expected"
+            exit 1
+          else
+            echo "PR_needed=false" >> $GITHUB_OUTPUT
+            echo "PR_number=$( jq '.[0].number' prs.json)" >> $GITHUB_OUTPUT
+          fi
+
+      
+  merge-check:
+    if: ${{ github.event.action != 'closed' }}
+    runs-on: ubuntu-latest
+    needs: get-info
+
+    steps:
+      
+      - name: Checkout to the target branch
+        uses: actions/checkout@v4
+
+      - name: Push the merged branch
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: | 
+          MERGE_BRANCH="${{ needs.get-info.outputs.merge_branch }}"
+          git checkout -b "$MERGE_BRANCH"
+          git push origin -f "$MERGE_BRANCH"
+
+      # Step 3: Checkout the next branch
+      - name: Set up a new PR to the target branch
+        if: ${{ needs.get-info.outputs.needs_pr == 'true' }}
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr create 
+          --title "MergeChek ${{ github.head_ref }} into ${{ needs.get-info.outputs.next_version }}"
+          --body "MergeChek ${{ github.head_ref }} into ${{ needs.get-info.outputs.next_version }}\nPlease refer to #${{ github.event.pull_request.number }}"
+          --base "${{ needs.get-info.outputs.next_version }}"
+          --head "${{ needs.get-info.outputs.merge_branch }}"
+          --label "merge-check"
+          --draft
+
+  remove-merge-check:
+    if: ${{ github.event.action == 'closed' }}
+    runs-on: ubuntu-latest
+    needs: get-info
+    steps:
+      - name: Checkout to the target branch to give context to the gh CLI
+        uses: actions/checkout@v4
+      - name: Remove merge-check PR and branch
+        if: ${{ needs.get-info.outputs.needs_pr == 'false' }}
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr close ${{ needs.get-info.outputs.pr_number }}
+          --delete-branch
+          --comment "The origin PR has been closed"
