@@ -91,7 +91,7 @@ jobs:
         run: | 
           MERGE_BRANCH="${{ needs.get-info.outputs.merge_branch }}"
           git checkout -b "$MERGE_BRANCH"
-          git remote -l
+          git remote -v
           git push origin -f "$MERGE_BRANCH"
 
       # Step 3: Checkout the next branch
