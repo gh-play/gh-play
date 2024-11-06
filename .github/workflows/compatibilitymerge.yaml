@@ -1,7 +1,7 @@
 name: MergeCheck
 
-# permissions:
-#       contents: write
+permissions:
+      contents: write
 
 on:
   workflow_call: #just to comment a single line
