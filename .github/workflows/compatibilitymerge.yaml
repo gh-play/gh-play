@@ -56,8 +56,9 @@ jobs:
         id: merge_branch
         env:
             GH_TOKEN: ${{ github.token }}
+            GH_HEAD: ${{ github.head_ref }}
         run: | 
-          MERGE_BRANCH="merge-test-${{ github.head_ref }}-into-${{ steps.next_version.outputs.branch }}-PR-${{ github.event.pull_request.number }}"
+          MERGE_BRANCH="merge-test-${GH_HEAD}-into-${{ steps.next_version.outputs.branch }}-PR-${{ github.event.pull_request.number }}"
           echo "branch=$MERGE_BRANCH" >> $GITHUB_OUTPUT
           gh pr list --draft --label merge-check -H "$MERGE_BRANCH" --json number > prs.json
           PRS=$(jq length prs.json)
@@ -99,10 +100,11 @@ jobs:
         if: ${{ needs.get-info.outputs.needs_pr == 'true' }}
         env:
             GH_TOKEN: ${{ github.token }}
+            GH_HEAD: ${{ github.head_ref }}
         run: >
           gh pr create 
-          --title "MergeChek ${{ github.head_ref }} into ${{ needs.get-info.outputs.next_version }}"
-          --body "MergeChek ${{ github.head_ref }} into ${{ needs.get-info.outputs.next_version }}\nPlease refer to #${{ github.event.pull_request.number }}"
+          --title "MergeChek ${GH_HEAD} into ${{ needs.get-info.outputs.next_version }}"
+          --body "MergeChek ${GH_HEAD} into ${{ needs.get-info.outputs.next_version }}\nPlease refer to #${{ github.event.pull_request.number }}"
           --base "${{ needs.get-info.outputs.next_version }}"
           --head "${{ needs.get-info.outputs.merge_branch }}"
           --label "merge-check"
