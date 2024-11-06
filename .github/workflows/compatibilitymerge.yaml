@@ -84,7 +84,7 @@ jobs:
       - name: Checkout to the target branch
         uses: actions/checkout@v4
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.SUPPORT_TOKEN }}
 
       - name: Push the merged branch
         env:
@@ -92,8 +92,9 @@ jobs:
         run: | 
           MERGE_BRANCH="${{ needs.get-info.outputs.merge_branch }}"
           git checkout -b "$MERGE_BRANCH"
+          git remote add support https://github.com/gh-play/gh-play-automerge.git
           git remote -v
-          git push origin -f "$MERGE_BRANCH"
+          git push support -f "$MERGE_BRANCH"
 
       # Step 3: Checkout the next branch
       - name: Set up a new PR to the target branch
