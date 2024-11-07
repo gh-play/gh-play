@@ -1,17 +1,13 @@
 name: Automerge v2.x branches
 
 on:
-  pull_request:   # Only trigger when there is a pull request
+  push:
     branches:
       - 'v2.*'    # Triggers on all v2.x branches
       #note that branches are v2.MINOR and tags are v2.MINOR.PATCH
-    types:
-      - closed
 
 jobs:
-  recursive-merge:
-    #triggers if the pull request is merged
-    if: github.event.pull_request.merged == true
+  auto-merge:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,10 +39,9 @@ jobs:
 
           echo "branch=$NEXT_BRANCH" >> $GITHUB_OUTPUT
           SHA=$(git rev-parse HEAD)
-          TOPUSH="automerge-${CURRENT_BRANCH}-$SHA-${NEXT_BRANCH}"
-          git checkout -b $TOPUSH
-          git remote add origin-automerge https://github.com/iximiel-bot/gh-play-botside.git
-          git push -u origin-automerge $TOPUSH
+          TOPUSH="automerge/${CURRENT_BRANCH}-$SHA-${NEXT_BRANCH}"
+          git checkout -b "$TOPUSH"
+          git push origin $TOPUSH
           echo "push=$TOPUSH" >> $GITHUB_OUTPUT
       
       - name: Set up a new PR to the target branch
@@ -56,7 +51,6 @@ jobs:
           gh pr create 
           --title "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
           --body "Automerging ${{ github.base_ref }} into ${{ steps.next_branch.outputs.branch }}"
-          --base "origin/${{ steps.next_branch.outputs.branch }}"
-          --head "origin-automerge/${{ steps.next_branch.outputs.push }}"
-          --label version-merge
-     
+          --base "${{ steps.next_branch.outputs.branch }}"
+          --head "${{ steps.next_branch.outputs.push }}"
+          --label auto-version-merge
