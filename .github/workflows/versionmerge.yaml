@@ -1,4 +1,4 @@
-name: Automerge v2.x branches
+name: Automerge versioned branches
 
 on:
   push:
@@ -20,9 +20,9 @@ jobs:
         id: next_branch
         run: |
           # Get current branch name (e.g., v2.9)
-          CURRENT_BRANCH=${{ github.base_ref }}
+          CURRENT_BRANCH=${{ github.ref }}
+          CURRENT_BRANCH=${CURRENT_BRANCH#refs/heads/}
           echo "base ref is $CURRENT_BRANCH"
-          echo "ref is ${{ github.ref }}"
           
           # Extract the version number, assuming the branch is named like v2.X (e.g., v2.9 or v2.10)
           CURRENT_VERSION=${CURRENT_BRANCH#v2.}
