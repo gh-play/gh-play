@@ -1,14 +1,15 @@
 name: MergeCheck
 
 on:
-  pull_request:   # Only trigger when there is a pull request
-    branches:
-      - 'v2.*'    # Triggers on all v2.x branches
-      #note that branches are v2.MINOR and tags are v2.MINOR.PATCH
-    types:
-      - opened
-      - synchronize
-      - closed
+  workflow_call: #just to comment a single line
+  # pull_request:   # Only trigger when there is a pull request
+  #   branches:
+  #     - 'v2.*'    # Triggers on all v2.x branches
+  #     #note that branches are v2.MINOR and tags are v2.MINOR.PATCH
+  #   types:
+  #     - opened
+  #     - synchronize
+  #     - closed
 
 jobs:
   get-info:
