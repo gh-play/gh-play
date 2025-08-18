@@ -23,7 +23,7 @@ jobs:
     steps:
       # Step 1: Checkout the merged branch
       - name: Checkout to the target branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
           
       # Step 2: Determine next branch dynamically using algebra
       - name: Determine next version branch
@@ -78,7 +78,7 @@ jobs:
     steps:
       
       - name: Checkout to the target branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Push the merged branch
         env:
@@ -108,7 +108,7 @@ jobs:
     needs: get-info
     steps:
       - name: Checkout to the target branch to give context to the gh CLI
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Remove merge-check PR and branch
         if: ${{ needs.get-info.outputs.needs_pr == 'false' }}
         env:

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     # in intial commit is set to v1 because I want to test also the dependabot
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Deploy to GitHub Pages
       # in intial commit is set to v3 because I want to test also the dependabot
       uses: peaceiris/actions-gh-pages@v4
